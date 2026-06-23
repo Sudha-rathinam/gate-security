@@ -1,6 +1,3 @@
-/**
- * Detailed view for a single vehicle history record.
- */
 import React from 'react';
 import {
   View,
@@ -12,12 +9,12 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useIsFocused } from '@react-navigation/native';
-import { ArrowLeft, Car, User, Clock, CheckCircle, AlertCircle, Wrench, FileText } from 'lucide-react-native';
+import { ArrowLeft, Car, User, Clock, CheckCircle, AlertCircle, Wrench, FileText, Phone } from 'lucide-react-native';
 import { COLORS, FONTS } from '../config/theme';
 import { showToast } from '../utils/toast';
 
 export default function HistoryDetailScreen({ route, navigation }) {
-  const { vehicleNumber, owner, status, entryType, meta } = route.params;
+  const { vehicleNumber, whatsappNumber, status, entryType, meta } = route.params;
   const isFocused = useIsFocused();
 
   const isCompleted = status === 'Completed' || status === 'Exit';
@@ -67,7 +64,7 @@ export default function HistoryDetailScreen({ route, navigation }) {
               <Text style={[styles.statusText, { color: statusColor }]}>{status}</Text>
             </View>
           </View>
-          <Text style={styles.ownerName}>{owner}</Text>
+          <Text style={styles.ownerName}>{whatsappNumber}</Text>
           {/* <Text style={styles.metaText}>{meta}</Text> */}
         </View>
 
@@ -77,8 +74,8 @@ export default function HistoryDetailScreen({ route, navigation }) {
 
           <InfoRow icon={<Car size={16} color={COLORS.primary} />}
             label="Registration No." value={vehicleNumber} />
-          <InfoRow icon={<User size={16} color={COLORS.primary} />}
-            label="Owner" value={owner} />
+          <InfoRow icon={<Phone size={16} color={COLORS.primary} />}
+            label="WhatsApp Number" value={whatsappNumber} />
           {entryType && (
             <InfoRow icon={<Wrench size={16} color={COLORS.primary} />}
               label="Entry Type" value={entryType} />

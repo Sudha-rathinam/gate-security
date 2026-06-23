@@ -1,16 +1,29 @@
-let userName = 'Bala';
+import { getSecureItem, setSecureItem, getInitials } from '../config/storage';
 
-export const getUserName = () => userName;
+let currentUserName = '';
 
-export const setUserName = (name) => {
-  userName = name || 'Bala';
-};
+export function getUserName() {
+    return currentUserName;
+}
 
-export const getInitials = (name) => {
-  if (!name) return 'GS';
-  const parts = name.trim().split(/\s+/);
-  if (parts.length === 1) {
-    return parts[0].slice(0, 2).toUpperCase();
-  }
-  return (parts[0][0] + (parts[parts.length - 1][0] || '')).toUpperCase();
-};
+export async function setUserName(name) {
+    currentUserName = name;
+    try {
+        await setSecureItem('userName', name);
+    } catch (error) {
+        console.error('Error setting userName:', error);
+    }
+}
+
+export async function initUserState() {
+    try {
+        const name = await getSecureItem('userName');
+        if (name) {
+            currentUserName = name;
+        }
+    } catch (error) {
+        console.error('Error initializing user state:', error);
+    }
+}
+
+export { getInitials };

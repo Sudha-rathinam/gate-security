@@ -1,10 +1,8 @@
-/**
- * Splash screen displayed while the app boots and redirects to login.
- */
 import React, { useEffect, useRef } from 'react';
 import { Text, ActivityIndicator, Animated } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import styles from '../styles/SplashScreenStyles.jsx';
+import { initUserState, getUserName } from '../utils/userState';
 
 export default function SplashScreen({ navigation }) {
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -24,7 +22,22 @@ export default function SplashScreen({ navigation }) {
       }),
     ]).start();
 
-    const timer = setTimeout(() => navigation.replace('Login'), 2800);
+    const checkSessionAndNavigate = async () => {
+      try {
+        await initUserState();
+        const savedUser = getUserName();
+        if (savedUser) {
+          navigation.replace('MainTabs');
+        } else {
+          navigation.replace('Login');
+        }
+      } catch (error) {
+        navigation.replace('Login');
+      }
+    };
+
+
+    const timer = setTimeout(checkSessionAndNavigate, 2800);
     return () => clearTimeout(timer);
   }, [navigation, fadeAnim, scaleAnim]);
 

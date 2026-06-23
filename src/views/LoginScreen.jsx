@@ -1,29 +1,30 @@
-/**
- * Login screen for workforce authentication and secure access.
- */
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform, StatusBar } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 import LottieView from 'lottie-react-native';
-import { Eye, EyeOff, User, Lock } from 'lucide-react-native';
+import { Eye, EyeOff, User, Lock, Mail } from 'lucide-react-native';
 import CustomInput from '../components/CustomInput';
 import CustomButton from '../components/CustomButton';
 import styles from '../styles/LoginScreenStyles.jsx';
 import { COLORS } from '../config/theme';
 import { setUserName } from '../utils/userState';
+import { setSecureItem } from '../config/storage';
+import { showToast } from '../utils/toast';
+import axios from 'axios';
+import { base_url, login } from '../config/constant';
 
 export default function LoginScreen({ navigation }) {
-  const [username, setUsername] = useState('');
+  const [emailId, setEmailId] = useState('');
   const [password, setPassword] = useState('');
-  const [usernameError, setUsernameError] = useState('');
+  const [emailIdError, setEmailIdError] = useState('');
   const [passwordError, setPasswordError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
-  const handleUsernameChange = (text) => {
-    setUsername(text);
+  const handleEmailIdChange = (text) => {
+    setEmailId(text);
     if (text.trim()) {
-      setUsernameError('');
+      setEmailIdError('');
     }
   };
 
@@ -34,14 +35,14 @@ export default function LoginScreen({ navigation }) {
     }
   };
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     let valid = true;
 
-    if (!username.trim()) {
-      setUsernameError('Username is required');
+    if (!emailId.trim()) {
+      setEmailIdError('Email ID is required');
       valid = false;
     } else {
-      setUsernameError('');
+      setEmailIdError('');
     }
 
     if (!password.trim()) {
@@ -52,8 +53,30 @@ export default function LoginScreen({ navigation }) {
     }
 
     if (valid) {
-      setUserName(username.trim());
-      navigation.replace('MainTabs');
+      try {
+        const response = await axios.post(base_url + login, {
+          emailId: emailId.trim(),
+          password: password,
+        });
+
+        const result = response.data;
+
+        if (result.success) {
+          const { token, user } = result.data;
+          await setSecureItem('token', token);
+          await setSecureItem('fullName', user.fullName);
+          await setUserName(user.fullName);
+
+          showToast('Login successful');
+          navigation.replace('MainTabs');
+        } else {
+          showToast(result.message || 'Login failed. Please check your credentials.');
+        }
+      } catch (error) {
+        console.error("Login API error:", error);
+        const errMsg = error.response?.data?.message || 'Network error. Unable to connect to server.';
+        showToast(errMsg);
+      }
     }
   };
 
@@ -112,13 +135,13 @@ export default function LoginScreen({ navigation }) {
             </View>
 
             <CustomInput
-              label="Username"
-              placeholder="Enter username"
-              value={username}
-              onChangeText={handleUsernameChange}
-              error={usernameError}
+              label="Email ID"
+              placeholder="Enter email ID"
+              value={emailId}
+              onChangeText={handleEmailIdChange}
+              error={emailIdError}
               variant="underlined"
-              leftIcon={<User size={18} color={COLORS.muted} />}
+              leftIcon={<Mail size={18} color={COLORS.muted} />}
             />
             <CustomInput
               label="Password"
@@ -144,12 +167,12 @@ export default function LoginScreen({ navigation }) {
 
             <CustomButton title="Login" onPress={handleLogin} />
 
-            <View style={styles.footerContainer}>
+            {/* <View style={styles.footerContainer}>
               <Text style={styles.footerText}>Don't have an Account? </Text>
               <TouchableOpacity activeOpacity={0.7}>
                 <Text style={styles.footerLink}>Sign up</Text>
               </TouchableOpacity>
-            </View>
+            </View> */}
           </View>
         </ScrollView>
       </KeyboardAvoidingView>

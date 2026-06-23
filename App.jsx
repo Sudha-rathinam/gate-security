@@ -14,7 +14,6 @@ import VehicleEntryScreen from './src/views/VehicleEntryScreen.jsx';
 import HistoryScreen from './src/views/HistoryScreen.jsx';
 import HistoryDetailScreen from './src/views/HistoryDetailScreen.jsx';
 import ProfileScreen from './src/views/ProfileScreen.jsx';
-import TodayListScreen from './src/views/TodayListScreen.jsx';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -58,7 +57,6 @@ export default function App() {
           <Stack.Screen name="MainTabs" component={MainTabs} />
           <Stack.Screen name="Entry" component={VehicleEntryScreen} />
           <Stack.Screen name="HistoryDetail" component={HistoryDetailScreen} />
-          <Stack.Screen name="TodayList" component={TodayListScreen} />
         </Stack.Navigator>
       </NavigationContainer>
     </SafeAreaProvider>

@@ -1,6 +1,3 @@
-/**
- * Profile screen — enhanced UI with stats, gradient header, and polished menu.
- */
 import React from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet, StatusBar,
@@ -13,9 +10,7 @@ import {
 import { COLORS, FONTS } from '../config/theme';
 import { getUserName, getInitials } from '../utils/userState';
 
-/* ──────────────────────────────────────────────────────
-   MENU ITEM ROW
-────────────────────────────────────────────────────── */
+
 function MenuItem({ icon: Icon, label, iconBg, iconColor, onPress, danger, last }) {
   return (
     <TouchableOpacity style={[s.menuItem, last && { borderBottomWidth: 0 }]} onPress={onPress} activeOpacity={0.6}>
@@ -28,9 +23,7 @@ function MenuItem({ icon: Icon, label, iconBg, iconColor, onPress, danger, last 
   );
 }
 
-/* ══════════════════════════════════════════════════════
-   MAIN
-══════════════════════════════════════════════════════ */
+
 export default function ProfileScreen({ navigation }) {
   const isFocused = useIsFocused();
   const currentName = getUserName();
@@ -41,7 +34,6 @@ export default function ProfileScreen({ navigation }) {
       {isFocused && <StatusBar barStyle="light-content" backgroundColor={COLORS.primary} translucent={true} />}
       <ScrollView showsVerticalScrollIndicator={false}>
 
-        {/* ── Blue gradient header band ── */}
         <View style={s.headerBand}>
           <Text style={s.headerTitle}>My Profile</Text>
 
@@ -76,9 +68,7 @@ export default function ProfileScreen({ navigation }) {
   );
 }
 
-/* ──────────────────────────────────────────────────────
-   STYLES
-────────────────────────────────────────────────────── */
+
 const s = StyleSheet.create({
   safe: { flex: 1, backgroundColor: COLORS.background },
 

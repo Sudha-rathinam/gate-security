@@ -1,8 +1,5 @@
-/**
- * Central theme values for the Vehicle360 UI.
- */
 export const COLORS = {
-  primary: '#0052CC',
+  primary: '#3b82f6',
   secondary: '#0F172A',
   success: '#22C55E',
   warning: '#F59E0B',
@@ -14,11 +11,11 @@ export const COLORS = {
 };
 
 export const FONTS = {
-  regular:  'Poppins-Regular',
-  medium:   'Poppins-Medium',
-  semiBold: 'Poppins-SemiBold',
-  bold:     'Poppins-Bold',
-  light:    'Poppins-Light',
+  regular:  'Inter-Regular',
+  medium:   'Inter-Medium',
+  semiBold: 'Inter-SemiBold',
+  bold:     'Inter-Bold',
+  light:    'Inter-Light',
 };
 
 export const SPACING = {

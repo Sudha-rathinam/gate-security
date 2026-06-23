@@ -1,6 +1,3 @@
-/**
- * Reusable input field with label and helper text support.
- */
 import React from 'react';
 import { View, Text, TextInput, StyleSheet } from 'react-native';
 import { COLORS, FONTS } from '../config/theme';

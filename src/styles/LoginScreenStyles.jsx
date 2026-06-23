@@ -13,7 +13,7 @@ export default StyleSheet.create({
   },
   lottieContainer: {
     position: 'absolute',
-    top: 145,
+    top: 195,
     left: 0,
     right: 0,
     bottom: 20,

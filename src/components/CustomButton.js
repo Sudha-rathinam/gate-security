@@ -1,6 +1,3 @@
-/**
- * Reusable button component for consistent action CTAs in the app.
- */
 import React from 'react';
 import { TouchableOpacity, Text, StyleSheet } from 'react-native';
 import { COLORS } from '../config/theme';

@@ -11,10 +11,10 @@ import { showToast } from '../utils/toast';
 
 /* Mock customer database containing known customers and their mock arrival details */
 const customerDB = [
-  { vehicleNumber: 'TN58AB1234', ownerName: 'Amit Sharma', arrivalDate: '19 Jun 2026', arrivalTime: '08:45 AM', entryType: 'Service' },
-  { vehicleNumber: 'TN58CA5678', ownerName: 'John Doe', arrivalDate: '19 Jun 2026', arrivalTime: '10:15 AM', entryType: 'Pickup' },
-  { vehicleNumber: 'TN58MN4321', ownerName: 'Naina Rao', arrivalDate: '19 Jun 2026', arrivalTime: '10:30 AM', entryType: 'Service' },
-  { vehicleNumber: 'TN58EG1212', ownerName: 'S. Reddy', arrivalDate: '19 Jun 2026', arrivalTime: '11:00 AM', entryType: 'Enquiry' },
+  { vehicleNumber: 'TN58AB1234', whatsappNumber: '9876543210', arrivalDate: '19 Jun 2026', arrivalTime: '08:45 AM', entryType: 'Service' },
+  { vehicleNumber: 'TN58CA5678', whatsappNumber: '9876543211', arrivalDate: '19 Jun 2026', arrivalTime: '10:15 AM', entryType: 'Pickup' },
+  { vehicleNumber: 'TN58MN4321', whatsappNumber: '9876543212', arrivalDate: '19 Jun 2026', arrivalTime: '10:30 AM', entryType: 'Service' },
+  { vehicleNumber: 'TN58EG1212', whatsappNumber: '9876543213', arrivalDate: '19 Jun 2026', arrivalTime: '11:00 AM', entryType: 'Enquiry' },
 ];
 
 /* ──────────────────────────────────────────────────────
@@ -38,7 +38,7 @@ export default function VehicleEntryScreen({ navigation }) {
 
   /* Entry/Exit state details */
   const [isCurrentlyParked, setIsCurrentlyParked] = useState(false);
-  const [ownerName, setOwnerName] = useState('');
+  const [whatsappNumber, setWhatsappNumber] = useState('');
   const [entryType, setEntryType] = useState('Service'); // 'Service' | 'Pickup' | 'Enquiry'
   const [arrivalDate, setArrivalDate] = useState('');
   const [arrivalTime, setArrivalTime] = useState('');
@@ -69,7 +69,7 @@ export default function VehicleEntryScreen({ navigation }) {
       if (customerMatch) {
         // Returning/existing customer -> Prepare for exit flow
         setIsCurrentlyParked(true);
-        setOwnerName(customerMatch.ownerName);
+        setWhatsappNumber(customerMatch.whatsappNumber);
         setEntryType(customerMatch.entryType || 'Service');
         setArrivalDate(customerMatch.arrivalDate);
         setArrivalTime(customerMatch.arrivalTime);
@@ -78,7 +78,7 @@ export default function VehicleEntryScreen({ navigation }) {
       } else {
         // New entry flow
         setIsCurrentlyParked(false);
-        setOwnerName('');
+        setWhatsappNumber('');
         setEntryType('Service');
         setTodayDate(currentTodayDate);
         setTodayTime(currentTodayTime);
@@ -93,7 +93,7 @@ export default function VehicleEntryScreen({ navigation }) {
   /* ── Reset state ── */
   const handleReset = () => {
     setVehicleNumber('');
-    setOwnerName('');
+    setWhatsappNumber('');
     setEntryType('Service');
     setArrivalDate('');
     setArrivalTime('');
@@ -107,14 +107,14 @@ export default function VehicleEntryScreen({ navigation }) {
 
   /* ── Submit Entry ── */
   const handleSubmitEntry = () => {
-    if (!ownerName.trim()) {
-      showToast('Please enter the owner\'s name.');
+    if (!whatsappNumber.trim()) {
+      showToast('Please enter the WhatsApp number.');
       return;
     }
 
     const newVehicle = {
       vehicleNumber: vehicleNumber,
-      ownerName: ownerName.trim(),
+      whatsappNumber: whatsappNumber.trim(),
       arrivalDate: todayDate,
       arrivalTime: todayTime,
       entryType: entryType,

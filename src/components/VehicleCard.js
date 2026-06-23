@@ -1,12 +1,9 @@
-/**
- * Premium compact vehicle summary card for lists and search results.
- */
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { COLORS, FONTS } from '../config/theme';
-import { Car, User, Clock, ChevronRight } from 'lucide-react-native';
+import { Car, Phone, Clock, ChevronRight } from 'lucide-react-native';
 
-export default function VehicleCard({ vehicleNumber, owner, status, entryType, meta }) {
+export default function VehicleCard({ vehicleNumber, whatsappNumber, status, entryType, meta }) {
   const isEntry = status === 'Inside' || status === 'Entry';
   const accentColor = isEntry ? COLORS.success : COLORS.warning;
 
@@ -26,10 +23,10 @@ export default function VehicleCard({ vehicleNumber, owner, status, entryType, m
           )}
         </View>
 
-        {/* Owner Info Row */}
+        {/* WhatsApp Info Row */}
         <View style={styles.infoRow}>
-          <User size={13} color={COLORS.muted} style={{ marginRight: 6 }} />
-          <Text style={styles.ownerText}>{owner}</Text>
+          <Phone size={13} color={COLORS.muted} style={{ marginRight: 6 }} />
+          <Text style={styles.ownerText}>{whatsappNumber}</Text>
         </View>
 
         {/* Timestamp Info Row */}

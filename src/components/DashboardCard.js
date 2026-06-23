@@ -1,6 +1,3 @@
-/**
- * Dashboard stat card used in the home screen and overview area.
- */
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { COLORS } from '../config/theme';

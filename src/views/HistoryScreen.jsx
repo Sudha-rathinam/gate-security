@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, TextInput, StyleSheet, StatusBar } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import { View, Text, FlatList, TouchableOpacity, TextInput, StyleSheet, StatusBar, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useIsFocused } from '@react-navigation/native';
 import { Calendar as CalendarIcon, X } from 'lucide-react-native';
@@ -7,19 +7,21 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import VehicleCard from '../components/VehicleCard';
 import styles from '../styles/HistoryScreenStyles.jsx';
 import { COLORS, FONTS } from '../config/theme';
-
-const allRecords = [
-  { vehicleNumber: 'TN58AB1234', owner: 'Amit Sharma', status: 'Exit', entryType: 'Service', date: '19 Jun 2026', meta: 'Entered 08:45 AM • Exited 04:10 PM' },
-  { vehicleNumber: 'TN58MN4321', owner: 'Naina Rao', status: 'Entry', entryType: 'Service', date: '19 Jun 2026', meta: 'Entered 10:30 AM' },
-  { vehicleNumber: 'TN58CA5678', owner: 'John Doe', status: 'Exit', entryType: 'Pickup', date: '19 Jun 2026', meta: 'Entered 10:15 AM • Exited 01:30 PM' },
-  { vehicleNumber: 'TN58EG1212', owner: 'S. Reddy', status: 'Entry', entryType: 'Enquiry', date: '19 Jun 2026', meta: 'Entered 11:00 AM' },
-];
+import axios from 'axios';
+import { base_url, get_history } from '../config/constant';
+import { getSecureItem } from '../config/storage';
+import { showToast } from '../utils/toast';
 
 export default function HistoryScreen({ navigation }) {
+  const [records, setRecords] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [showCalendar, setShowCalendar] = useState(false);
-  const [date, setDate] = useState(new Date(2026, 5, 19)); // Default to 19 June 2026 to match mock data
+  const [date, setDate] = useState(null); // Default to null (shows all records)
   const [activeTab, setActiveTab] = useState('Entry'); // 'Entry' | 'Exit'
+  const [loading, setLoading] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
   const isFocused = useIsFocused();
 
   const handleDateChange = (event, selectedDate) => {
@@ -30,19 +32,109 @@ export default function HistoryScreen({ navigation }) {
   };
 
   const fmtDate = (d) => {
+    if (!d) return '';
     return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+  };
+
+  const formatISODate = (d) => {
+    if (!d) return '';
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   };
 
   const selectedDateStr = fmtDate(date);
 
-  // Filter based on search query, selected date, and active tab
-  const filteredRecords = allRecords.filter(item => {
-    const matchesSearch = item.vehicleNumber.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          item.owner.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesDate = item.date === selectedDateStr;
-    const matchesTab = item.status.toLowerCase() === activeTab.toLowerCase();
-    return matchesSearch && matchesDate && matchesTab;
-  });
+  const loadData = useCallback(async (pageNum, isLoadMore = false) => {
+    if (pageNum === 1) {
+      setLoading(true);
+    } else {
+      setLoadingMore(true);
+    }
+
+    try {
+      const token = await getSecureItem('token');
+      let url = `${base_url}${get_history}?page=${pageNum}&limit=10`;
+
+      if (searchQuery.trim()) {
+        url += `&registrationNumber=${encodeURIComponent(searchQuery.trim())}`;
+      }
+      if (date) {
+        const formattedDate = formatISODate(date);
+        url += `&fromDate=${formattedDate}&toDate=${formattedDate}`;
+      }
+      
+      // Filter status by mapping 'Entry' / 'Exit' tab to status query
+      url += `&status=${activeTab.toLowerCase()}`;
+
+      const response = await axios.get(url, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      const result = response.data;
+      if (result && result.success && Array.isArray(result.data)) {
+        const mapped = result.data.map(item => {
+          const entryTime = item.entryTime || (item.createdAt ? new Date(item.createdAt).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: true }) : '');
+          const exitTime = item.exitTime ? new Date(item.exitTime).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: true }) : '';
+          const metaStr = item.meta || `Entered ${entryTime}${exitTime ? ` • Exited ${exitTime}` : ''}`;
+          
+          return {
+            vehicleNumber: item.registrationNumber || item.vehicleNumber || '',
+            whatsappNumber: item.whatsappNumber || '',
+            status: item.status || (item.exitTime ? 'Exit' : 'Entry'),
+            entryType: item.entryType || '',
+            date: item.date || (item.createdAt ? new Date(item.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : ''),
+            meta: metaStr,
+            rawItem: item,
+          };
+        });
+
+        // Backend returns status-filtered entries directly. In case backend doesn't support status param,
+        // we can still locally filter as a fallback safety measure:
+        const localFiltered = mapped.filter(item => item.status.toLowerCase() === activeTab.toLowerCase());
+
+        if (isLoadMore) {
+          setRecords(prev => [...prev, ...localFiltered]);
+        } else {
+          setRecords(localFiltered);
+        }
+
+        if (result.pagination) {
+          setHasMore(pageNum < result.pagination.pages);
+        } else {
+          setHasMore(result.data.length === 10);
+        }
+      } else {
+        if (!isLoadMore) setRecords([]);
+        setHasMore(false);
+      }
+    } catch (error) {
+      console.error('Fetch history error:', error);
+      showToast('Failed to fetch history.');
+      setHasMore(false);
+    } finally {
+      setLoading(false);
+      setLoadingMore(false);
+    }
+  }, [searchQuery, date, activeTab]);
+
+  useEffect(() => {
+    if (isFocused) {
+      setPage(1);
+      loadData(1, false);
+    }
+  }, [isFocused, searchQuery, date, activeTab, loadData]);
+
+  const handleLoadMore = () => {
+    if (!loading && !loadingMore && hasMore) {
+      const nextPage = page + 1;
+      setPage(nextPage);
+      loadData(nextPage, true);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
@@ -55,7 +147,7 @@ export default function HistoryScreen({ navigation }) {
           <View style={styles.searchBox}>
             <TextInput
               style={styles.searchInput}
-              placeholder="Search by vehicle or owner..."
+              placeholder="Search by vehicle or phone..."
               placeholderTextColor={COLORS.muted}
               value={searchQuery}
               onChangeText={setSearchQuery}
@@ -68,28 +160,28 @@ export default function HistoryScreen({ navigation }) {
         </View>
 
         {/* Selected date filter chip */}
-        <View style={localStyles.filterChipRow}>
-          <View style={localStyles.chip}>
-            <Text style={localStyles.chipText}>Date: {selectedDateStr}</Text>
-            {selectedDateStr !== '19 Jun 2026' && (
-              <TouchableOpacity onPress={() => setDate(new Date(2026, 5, 19))} style={localStyles.chipCloseBtn}>
+        {date && (
+          <View style={localStyles.filterChipRow}>
+            <View style={localStyles.chip}>
+              <Text style={localStyles.chipText}>Date: {selectedDateStr}</Text>
+              <TouchableOpacity onPress={() => setDate(null)} style={localStyles.chipCloseBtn}>
                 <X size={12} color={COLORS.primary} />
               </TouchableOpacity>
-            )}
+            </View>
           </View>
-        </View>
+        )}
 
         {/* Tab Switcher */}
         <View style={localStyles.tabContainer}>
-          <TouchableOpacity 
-            style={[localStyles.tabButton, activeTab === 'Entry' && localStyles.activeTabButton]} 
+          <TouchableOpacity
+            style={[localStyles.tabButton, activeTab === 'Entry' && localStyles.activeTabButton]}
             onPress={() => setActiveTab('Entry')}
             activeOpacity={0.8}
           >
             <Text style={[localStyles.tabText, activeTab === 'Entry' && localStyles.activeTabText]}>Entries</Text>
           </TouchableOpacity>
-          <TouchableOpacity 
-            style={[localStyles.tabButton, activeTab === 'Exit' && localStyles.activeTabButton]} 
+          <TouchableOpacity
+            style={[localStyles.tabButton, activeTab === 'Exit' && localStyles.activeTabButton]}
             onPress={() => setActiveTab('Exit')}
             activeOpacity={0.8}
           >
@@ -98,38 +190,57 @@ export default function HistoryScreen({ navigation }) {
         </View>
       </View>
 
-      {/* Scrolling Content List */}
-      <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
-        <View style={styles.listSection}>
-          <Text style={styles.sectionTitle}>Recent Records</Text>
-          {filteredRecords.length === 0 ? (
-            <View style={localStyles.emptyContainer}>
-              <Text style={localStyles.emptyText}>No {activeTab.toLowerCase() === 'entry' ? 'entries' : 'exits'} found for {selectedDateStr}</Text>
-            </View>
-          ) : (
-            filteredRecords.map((item) => (
-              <TouchableOpacity
-                key={item.vehicleNumber}
-                activeOpacity={0.75}
-                onPress={() => navigation.navigate('HistoryDetail', item)}
-              >
-                <VehicleCard
-                  vehicleNumber={item.vehicleNumber}
-                  owner={item.owner}
-                  status={item.status}
-                  entryType={item.entryType}
-                  meta={item.meta}
-                />
-              </TouchableOpacity>
-            ))
-          )}
+      {/* Scrolling Content List using FlatList for infinite pagination */}
+      {loading && page === 1 ? (
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <ActivityIndicator size="large" color={COLORS.primary} />
         </View>
-      </ScrollView>
+      ) : (
+        <FlatList
+          data={records}
+          contentContainerStyle={[styles.scrollContainer, { paddingBottom: 40 }]}
+          showsVerticalScrollIndicator={false}
+          keyExtractor={(item, index) => `${item.vehicleNumber}_${index}`}
+          renderItem={({ item }) => (
+            <TouchableOpacity
+              activeOpacity={0.75}
+              onPress={() => navigation.navigate('HistoryDetail', item)}
+            >
+              <VehicleCard
+                vehicleNumber={item.vehicleNumber}
+                whatsappNumber={item.whatsappNumber}
+                status={item.status}
+                entryType={item.entryType}
+                meta={item.meta}
+              />
+            </TouchableOpacity>
+          )}
+          ListHeaderComponent={
+            <Text style={styles.sectionTitle}>Recent Records</Text>
+          }
+          ListEmptyComponent={
+            <View style={localStyles.emptyContainer}>
+              <Text style={localStyles.emptyText}>
+                No {activeTab.toLowerCase() === 'entry' ? 'entries' : 'exits'} found{date ? ` for ${selectedDateStr}` : ''}
+              </Text>
+            </View>
+          }
+          ListFooterComponent={
+            loadingMore ? (
+              <View style={{ paddingVertical: 20 }}>
+                <ActivityIndicator size="small" color={COLORS.primary} />
+              </View>
+            ) : null
+          }
+          onEndReached={handleLoadMore}
+          onEndReachedThreshold={0.3}
+        />
+      )}
 
       {/* OS Built-in Calendar Picker */}
       {showCalendar && (
         <DateTimePicker
-          value={date}
+          value={date || new Date()}
           mode="date"
           display="default"
           onChange={handleDateChange}

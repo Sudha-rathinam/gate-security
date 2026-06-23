@@ -1,9 +1,9 @@
 const Fonts = {
-    Poppins_Regular: 'Poppins-Regular',
-    Poppins_Medium: 'Poppins-Medium',
-    Poppins_SemiBold: 'Poppins-SemiBold',
-    Poppins_Bold: 'Poppins-Bold',
-    Poppins_light: 'Poppins-Light',
+    Poppins_Regular: 'Inter-Regular',
+    Poppins_Medium: 'Inter-Medium',
+    Poppins_SemiBold: 'Inter-SemiBold',
+    Poppins_Bold: 'Inter-Bold',
+    Poppins_light: 'Inter-Light',
 };
 
 export default Fonts;
