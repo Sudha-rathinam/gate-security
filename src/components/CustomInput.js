@@ -3,7 +3,7 @@
  */
 import React from 'react';
 import { View, Text, TextInput, StyleSheet } from 'react-native';
-import { COLORS, FONTS } from '../../config/theme';
+import { COLORS, FONTS } from '../config/theme';
 
 export default function CustomInput({ label, placeholder, value, onChangeText, secureTextEntry, icon, leftIcon, error, variant }) {
   const isUnderlined = variant === 'underlined';

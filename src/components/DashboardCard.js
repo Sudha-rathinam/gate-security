@@ -3,7 +3,7 @@
  */
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { COLORS } from '../../config/theme';
+import { COLORS } from '../config/theme';
 
 export default function DashboardCard({ label, value, tone = 'primary', icon }) {
   return (

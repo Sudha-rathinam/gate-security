@@ -3,7 +3,7 @@
  */
 import React from 'react';
 import { TouchableOpacity, Text, StyleSheet } from 'react-native';
-import { COLORS } from '../../config/theme';
+import { COLORS } from '../config/theme';
 
 export default function CustomButton({ title, onPress, variant = 'primary', style }) {
   const isSecondary = variant === 'secondary';

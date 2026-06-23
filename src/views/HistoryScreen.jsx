@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useIsFocused } from '@react-navigation/native';
 import { Calendar as CalendarIcon, X } from 'lucide-react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import VehicleCard from './components/VehicleCard';
+import VehicleCard from '../components/VehicleCard';
 import styles from '../styles/HistoryScreenStyles.jsx';
 import { COLORS, FONTS } from '../config/theme';
 

@@ -3,7 +3,7 @@
  */
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { COLORS, FONTS } from '../../config/theme';
+import { COLORS, FONTS } from '../config/theme';
 import { Car, User, Clock, ChevronRight } from 'lucide-react-native';
 
 export default function VehicleCard({ vehicleNumber, owner, status, entryType, meta }) {
