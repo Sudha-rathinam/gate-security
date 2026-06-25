@@ -15,9 +15,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
-               BuildableName = "vehicle360.app"
-               BlueprintName = "vehicle360"
-               ReferencedContainer = "container:vehicle360.xcodeproj">
+               BuildableName = "gatesecurity.app"
+               BlueprintName = "gatesecurity"
+               ReferencedContainer = "container:gatesecurity.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -33,9 +33,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "00E356ED1AD99517003FC87E"
-               BuildableName = "vehicle360Tests.xctest"
-               BlueprintName = "vehicle360Tests"
-               ReferencedContainer = "container:vehicle360.xcodeproj">
+               BuildableName = "gatesecurityTests.xctest"
+               BlueprintName = "gatesecurityTests"
+               ReferencedContainer = "container:gatesecurity.xcodeproj">
             </BuildableReference>
          </TestableReference>
       </Testables>
@@ -55,9 +55,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
-            BuildableName = "vehicle360.app"
-            BlueprintName = "vehicle360"
-            ReferencedContainer = "container:vehicle360.xcodeproj">
+            BuildableName = "gatesecurity.app"
+            BlueprintName = "gatesecurity"
+            ReferencedContainer = "container:gatesecurity.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </LaunchAction>
@@ -72,9 +72,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
-            BuildableName = "vehicle360.app"
-            BlueprintName = "vehicle360"
-            ReferencedContainer = "container:vehicle360.xcodeproj">
+            BuildableName = "gatesecurity.app"
+            BlueprintName = "gatesecurity"
+            ReferencedContainer = "container:gatesecurity.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>

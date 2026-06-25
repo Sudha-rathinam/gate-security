@@ -1,4 +1,4 @@
-package com.vehicle360
+package com.gatesecurity
 
 import android.app.Application
 import com.facebook.react.PackageList

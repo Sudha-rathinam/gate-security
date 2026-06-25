@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -6,16 +6,21 @@ import {
   TouchableOpacity,
   StyleSheet,
   StatusBar,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useIsFocused } from '@react-navigation/native';
-import { ArrowLeft, Car, User, Clock, CheckCircle, AlertCircle, Wrench, FileText, Phone } from 'lucide-react-native';
+import { ArrowLeft, Car, Clock, CheckCircle, AlertCircle, Wrench, Phone } from 'lucide-react-native';
 import { COLORS, FONTS } from '../config/theme';
 import { showToast } from '../utils/toast';
+import { base_url, exit } from '../config/constant';
+import axios from 'axios';
+import { retrieveEncryptedData } from '../config/storage';
 
 export default function HistoryDetailScreen({ route, navigation }) {
-  const { vehicleNumber, whatsappNumber, status, entryType, meta } = route.params;
+  const { vehicleNumber, whatsappNumber, status, entryType, meta, date, rawItem } = route.params;
   const isFocused = useIsFocused();
+  const [loading, setLoading] = useState(false);
 
   const isCompleted = status === 'Completed' || status === 'Exit';
 
@@ -26,17 +31,43 @@ export default function HistoryDetailScreen({ route, navigation }) {
   // Parse entry / exit from meta string (e.g. "Entered 08:45 AM • Exited 04:10 PM")
   const entryMatch = meta?.match(/Entered\s([\d:]+\s[AP]M)/i);
   const exitMatch = meta?.match(/Exited\s([\d:]+\s[AP]M)/i);
-  
-  const now = new Date();
-  const currentTodayDate = now.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-  const currentTodayTime = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: true });
-  const todayDateTime = `${currentTodayDate} • ${currentTodayTime}`;
+
+  const recordDate = date || '';
+  const entryDateTime = entryMatch ? (recordDate ? `${recordDate} • ${entryMatch[1]}` : entryMatch[1]) : '-';
+  const exitDateTime = exitMatch ? (recordDate ? `${recordDate} • ${exitMatch[1]}` : exitMatch[1]) : '-';
 
   const isEntryPhase = status === 'Entry' || status === 'Inside' || status === 'Pending';
 
-  const todayStr = "19 Jun 2026";
-  const entryDateTime = entryMatch ? `${todayStr} • ${entryMatch[1]}` : '—';
-  const exitDateTime = isEntryPhase ? todayDateTime : (exitMatch ? `${todayStr} • ${exitMatch[1]}` : '—');
+  const handleSubmitExit = async () => {
+    setLoading(true);
+    try {
+      const token = await retrieveEncryptedData('token');
+      let gateEntryId = rawItem?.id || rawItem?._id;
+
+      if (!gateEntryId) {
+        showToast('No active gate entry found to exit.');
+        return;
+      }
+
+      const response = await axios.put(`${base_url}${exit}/${gateEntryId}`, {}, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (response.status === 200 || response.status === 201 || response.data?.success) {
+        showToast(`Exit registered successfully for vehicle ${vehicleNumber}`);
+        navigation.goBack();
+      } else {
+        showToast(response.data?.message || 'Failed to submit exit.');
+      }
+    } catch (error) {
+      showToast('Failed to submit exit.');
+      console.error('Submit Exit API error:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -93,37 +124,17 @@ export default function HistoryDetailScreen({ route, navigation }) {
 
         {isEntryPhase && (
           <TouchableOpacity
-            style={styles.submitExitBtn}
-            onPress={() => {
-              showToast(`Vehicle ${vehicleNumber} exit recorded successfully.`);
-              navigation.goBack();
-            }}
+            style={[styles.submitExitBtn, loading && { opacity: 0.8 }]}
+            onPress={handleSubmitExit}
+            disabled={loading}
           >
-            <Text style={styles.submitExitBtnText}>SUBMIT EXIT</Text>
+            {loading ? (
+              <ActivityIndicator size="small" color="#fff" />
+            ) : (
+              <Text style={styles.submitExitBtnText}>SUBMIT EXIT</Text>
+            )}
           </TouchableOpacity>
         )}
-
-        {/* <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Service Details</Text>
-
-          <InfoRow icon={<Wrench size={16} color={COLORS.primary} />}
-            label="Service Type" value="General Inspection" />
-          <InfoRow icon={<FileText size={16} color={COLORS.primary} />}
-            label="Remarks" value="No visible damage reported." />
-        </View> */}
-
-        {/* Status timeline */}
-        {/* <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Status Timeline</Text>
-          <TimelineStep done label="Vehicle Arrived" time={entryTime} />
-          <TimelineStep done label="Inspection Done" time="10:30 AM" />
-          <TimelineStep done={isCompleted} label="Work Completed" time={isCompleted ? exitTime : '—'} />
-          <TimelineStep done={isCompleted} label="Vehicle Exited" time={isCompleted ? exitTime : 'Pending'} last />
-        </View> */}
-
-        {/* <TouchableOpacity style={styles.goBackBtn} onPress={() => navigation.goBack()}>
-          <Text style={styles.goBackText}>← Back to History</Text>
-        </TouchableOpacity> */}
       </ScrollView>
     </SafeAreaView>
   );
@@ -138,21 +149,6 @@ function InfoRow({ icon, label, value }) {
       <View style={{ flex: 1 }}>
         <Text style={styles.infoLabel}>{label}</Text>
         <Text style={styles.infoValue}>{value}</Text>
-      </View>
-    </View>
-  );
-}
-
-function TimelineStep({ done, label, time, last }) {
-  return (
-    <View style={styles.timelineRow}>
-      <View style={styles.timelineLeft}>
-        <View style={[styles.timelineDot, done && styles.timelineDotDone]} />
-        {!last && <View style={[styles.timelineLine, done && styles.timelineLineDone]} />}
-      </View>
-      <View style={styles.timelineContent}>
-        <Text style={[styles.timelineLabel, done && styles.timelineLabelDone]}>{label}</Text>
-        <Text style={styles.timelineTime}>{time}</Text>
       </View>
     </View>
   );
@@ -222,21 +218,6 @@ const styles = StyleSheet.create({
   infoLabel: { color: COLORS.muted, fontSize: 11, fontFamily: FONTS.medium, marginBottom: 2 },
   infoValue: { color: COLORS.secondary, fontSize: 14, fontFamily: FONTS.bold },
 
-  /* Timeline */
-  timelineRow: { flexDirection: 'row', marginBottom: 0 },
-  timelineLeft: { width: 24, alignItems: 'center' },
-  timelineDot: { width: 12, height: 12, borderRadius: 6, backgroundColor: COLORS.border, borderWidth: 2, borderColor: COLORS.border, marginTop: 2 },
-  timelineDotDone: { backgroundColor: COLORS.primary, borderColor: COLORS.primary },
-  timelineLine: { width: 2, flex: 1, backgroundColor: COLORS.border, marginVertical: 2 },
-  timelineLineDone: { backgroundColor: COLORS.primary },
-  timelineContent: { flex: 1, paddingLeft: 10, paddingBottom: 14 },
-  timelineLabel: { color: COLORS.muted, fontSize: 13, fontFamily: FONTS.bold },
-  timelineLabelDone: { color: COLORS.secondary },
-  timelineTime: { color: COLORS.muted, fontSize: 11, marginTop: 2, fontFamily: FONTS.regular },
-
-  /* Back button */
-  goBackBtn: { alignItems: 'center', paddingVertical: 14 },
-  goBackText: { color: COLORS.primary, fontSize: 14, fontFamily: FONTS.bold },
   submitExitBtn: {
     backgroundColor: '#EF4444',
     borderRadius: 14,

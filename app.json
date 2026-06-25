@@ -1,8 +1,8 @@
 {
-  "name": "vehicle360",
+  "name": "gatesecurity",
   "displayName": "DVSOS Gate security",
   "splash": {
-    "image": "./src/assets/icons/vehicle360.png",
+    "image": "./src/assets/icons/gatesecurity.png",
     "resizeMode": "contain",
     "backgroundColor": "#0052CC"
   }

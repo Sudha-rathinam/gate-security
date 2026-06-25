@@ -1,5 +1,5 @@
 {
-  "name": "vehicle360",
+  "name": "gatesecurity",
   "version": "0.0.1",
   "private": true,
   "scripts": {
@@ -17,11 +17,12 @@
     "@react-navigation/native-stack": "^7.17.3",
     "@react-navigation/stack": "^7.10.3",
     "axios": "^1.18.1",
+    "config": "^4.4.1",
     "crypto-js": "^4.2.0",
     "lottie-react-native": "^7.3.8",
     "lucide-react-native": "^1.17.0",
     "react": "19.1.0",
-    "react-native": "0.80.0",
+    "react-native": "^0.80.0",
     "react-native-encrypted-storage": "^4.0.3",
     "react-native-get-random-values": "^2.0.0",
     "react-native-image-picker": "^8.2.1",

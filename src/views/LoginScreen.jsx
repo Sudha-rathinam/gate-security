@@ -1,15 +1,14 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform, StatusBar } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform, StatusBar, Modal, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 import LottieView from 'lottie-react-native';
-import { Eye, EyeOff, User, Lock, Mail } from 'lucide-react-native';
+import { Eye, EyeOff, Lock, Mail } from 'lucide-react-native';
 import CustomInput from '../components/CustomInput';
 import CustomButton from '../components/CustomButton';
 import styles from '../styles/LoginScreenStyles.jsx';
 import { COLORS } from '../config/theme';
-import { setUserName } from '../utils/userState';
-import { setSecureItem } from '../config/storage';
+import { storeEncryptedData } from '../config/storage';
 import { showToast } from '../utils/toast';
 import axios from 'axios';
 import { base_url, login } from '../config/constant';
@@ -20,6 +19,53 @@ export default function LoginScreen({ navigation }) {
   const [emailIdError, setEmailIdError] = useState('');
   const [passwordError, setPasswordError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+
+  const [forgotModalVisible, setForgotModalVisible] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotEmailError, setForgotEmailError] = useState('');
+  const [forgotLoading, setForgotLoading] = useState(false);
+
+  const handleForgotEmailChange = (text) => {
+    setForgotEmail(text);
+    if (text.trim()) {
+      setForgotEmailError('');
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    if (!forgotEmail.trim()) {
+      setForgotEmailError('Email ID is required');
+      return;
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(forgotEmail.trim())) {
+      setForgotEmailError('Please enter a valid email address');
+      return;
+    }
+
+    setForgotLoading(true);
+    try {
+      const response = await axios.post(base_url + 'api/auth/forgot-password', {
+        emailId: forgotEmail.trim(),
+      });
+      const result = response.data;
+      if (result.success) {
+        showToast(result.message || 'Password reset link sent to your email');
+        setForgotModalVisible(false);
+        setForgotEmail('');
+      } else {
+        showToast(result.message || 'Failed to send reset link');
+      }
+    } catch (error) {
+      console.error("Forgot password error:", error);
+      const errMsg = error.response?.data?.message || 'Password reset link sent to your email (if registered)';
+      showToast(errMsg);
+      setForgotModalVisible(false);
+      setForgotEmail('');
+    } finally {
+      setForgotLoading(false);
+    }
+  };
 
   const handleEmailIdChange = (text) => {
     setEmailId(text);
@@ -63,9 +109,11 @@ export default function LoginScreen({ navigation }) {
 
         if (result.success) {
           const { token, user } = result.data;
-          await setSecureItem('token', token);
-          await setSecureItem('fullName', user.fullName);
-          await setUserName(user.fullName);
+          await storeEncryptedData('token', token);
+          await storeEncryptedData('user', JSON.stringify(user));
+          await storeEncryptedData('fullName', user.fullName);
+          await storeEncryptedData('emailId', user.emailId || '');
+          await storeEncryptedData('mobileNo', user.mobileNo || '');
 
           showToast('Login successful');
           navigation.replace('MainTabs');
@@ -142,6 +190,8 @@ export default function LoginScreen({ navigation }) {
               error={emailIdError}
               variant="underlined"
               leftIcon={<Mail size={18} color={COLORS.muted} />}
+              autoCapitalize="none"
+              keyboardType="email-address"
             />
             <CustomInput
               label="Password"
@@ -161,21 +211,76 @@ export default function LoginScreen({ navigation }) {
               }
             />
 
-            <TouchableOpacity activeOpacity={0.7}>
+            <TouchableOpacity activeOpacity={0.7} onPress={() => setForgotModalVisible(true)}>
               <Text style={styles.forgotText}>Forgot Password?</Text>
             </TouchableOpacity>
 
             <CustomButton title="Login" onPress={handleLogin} />
-
-            {/* <View style={styles.footerContainer}>
-              <Text style={styles.footerText}>Don't have an Account? </Text>
-              <TouchableOpacity activeOpacity={0.7}>
-                <Text style={styles.footerLink}>Sign up</Text>
-              </TouchableOpacity>
-            </View> */}
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      <Modal
+        visible={forgotModalVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => {
+          if (!forgotLoading) {
+            setForgotModalVisible(false);
+            setForgotEmail('');
+            setForgotEmailError('');
+          }
+        }}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Forgot Password</Text>
+            <Text style={styles.modalSubtitle}>
+              Enter your registered Email ID to receive password reset instructions.
+            </Text>
+
+            <CustomInput
+              label="Email ID"
+              placeholder="Enter email ID"
+              value={forgotEmail}
+              onChangeText={handleForgotEmailChange}
+              error={forgotEmailError}
+              variant="underlined"
+              leftIcon={<Mail size={18} color={COLORS.muted} />}
+              autoCapitalize="none"
+              keyboardType="email-address"
+            />
+
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.cancelButton]}
+                onPress={() => {
+                  setForgotModalVisible(false);
+                  setForgotEmail('');
+                  setForgotEmailError('');
+                }}
+                disabled={forgotLoading}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.cancelButtonText}>Cancel</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.modalButton, styles.submitButton]}
+                onPress={handleForgotPassword}
+                disabled={forgotLoading}
+                activeOpacity={0.7}
+              >
+                {forgotLoading ? (
+                  <ActivityIndicator size="small" color="#FFFFFF" />
+                ) : (
+                  <Text style={styles.submitButtonText}>Submit</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }

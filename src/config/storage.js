@@ -46,21 +46,6 @@ export async function removeEncryptedData(key) {
     }
 }
 
-export async function setSecureItem(key, value) {
-    const stringValue = typeof value === 'string' ? value : JSON.stringify(value);
-    await storeEncryptedData(key, stringValue);
-}
-
-export async function getSecureItem(key) {
-    const decrypted = await retrieveEncryptedData(key);
-    if (!decrypted) return null;
-    try {
-        return JSON.parse(decrypted);
-    } catch (e) {
-        return decrypted;
-    }
-}
-
 export function getInitials(name) {
     if (!name) return '';
     const parts = name.trim().split(/\s+/);

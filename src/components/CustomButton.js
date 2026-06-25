@@ -1,6 +1,6 @@
 import React from 'react';
 import { TouchableOpacity, Text, StyleSheet } from 'react-native';
-import { COLORS } from '../config/theme';
+import { COLORS, FONTS } from '../config/theme';
 
 export default function CustomButton({ title, onPress, variant = 'primary', style }) {
   const isSecondary = variant === 'secondary';
@@ -30,6 +30,6 @@ const styles = StyleSheet.create({
   },
   primary: { backgroundColor: COLORS.primary },
   secondary: { backgroundColor: COLORS.card, borderWidth: 1, borderColor: COLORS.border },
-  label: { fontSize: 15, fontWeight: '700', color: COLORS.card },
+  label: { fontSize: 15, fontFamily: FONTS.inter, fontWeight: '500', color: COLORS.card },
   secondaryLabel: { color: COLORS.secondary },
 });
